@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard — MyShop</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#4f46e5;--danger:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;background:var(--bg);color:#0f172a}
+    .app{display:flex;min-height:100vh}
+
+    /* Sidebar */
+    .sidebar{width:260px;background:linear-gradient(180deg, #111827, #0b1220);color:#fff;padding:28px 18px;display:flex;flex-direction:column;gap:18px}
+    .brand{font-weight:800;font-size:20px;color:#fff;margin-bottom:6px}
+    .small{font-size:13px;color:rgba(255,255,255,0.75)}
+    .nav{margin-top:12px}
+    .nav a{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;color:rgba(255,255,255,0.9);text-decoration:none;margin-bottom:6px}
+    .nav a:hover{background:rgba(255,255,255,0.04)}
+    .nav a.active{background:rgba(255,255,255,0.06)}
+
+    /* Main */
+    .main{flex:1;padding:22px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .search{display:flex;align-items:center;gap:8px;background:var(--card);padding:8px 12px;border-radius:12px;box-shadow:0 2px 6px rgba(2,6,23,0.06)}
+    .search input{border:0;outline:none}
+    .avatar{display:flex;gap:12px;align-items:center}
+    .avatar img{width:40px;height:40px;border-radius:10px}
+
+    /* Stats */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+    .card .title{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .card .value{font-size:20px;font-weight:700}
+    .card .meta{font-size:13px;color:var(--muted);margin-top:8px}
+
+    /* Grid */
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+
+    /* Orders table */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #eef2f7;font-size:14px}
+    th{font-size:13px;color:var(--muted);font-weight:600}
+    .status{padding:6px 10px;border-radius:999px;font-weight:600;font-size:12px}
+    .status.pending{background:#fff7ed;color:#b45309}
+    .status.completed{background:#ecfdf5;color:#047857}
+    .status.cancelled{background:#fff1f2;color:#b91c1c}
+
+    /* Sellers list */
+    .seller{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px}
+    .seller .left{display:flex;gap:12px;align-items:center}
+    .seller img{width:44px;height:44px;border-radius:8px;object-fit:cover}
+    .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid #e6e9ef}
+    .btn.danger{background:var(--danger);color:#fff}
+
+    /* Responsive */
+    @media (max-width:960px){
+      .sidebar{display:none}
+      .grid{grid-template-columns:1fr}
+    }
+
+    footer{margin-top:26px;color:var(--muted);font-size:13px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div>
+        <div class="brand">MyShop Admin</div>
+        <div class="small">Manage products, orders & sellers</div>
+      </div>
+
+      <nav class="nav">
+        <a href="#" class="active">🏠 Dashboard</a>
+        <a href="#orders">📦 Orders</a>
+        <a href="#products">🛍️ Products</a>
+        <a href="#sellers">🧑‍🏫 Sellers</a>
+        <a href="#users">👥 Users</a>
+        <a href="#settings">⚙️ Settings</a>
+      </nav>
+
+      <div style="margin-top:auto;font-size:13px;color:rgba(255,255,255,0.7)">Signed in as <br/><strong>admin@myshop.com</strong></div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="search card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:.7"><path d="M21 21l-4.35-4.35" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><input placeholder="Search orders, users, products..." /></div>
+        <div class="avatar">
+          <div style="text-align:right;font-size:13px;color:var(--muted)">Welcome back,<br/><strong>Admin</strong></div>
+          <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg" alt="avatar" />
+        </div>
+      </div>
+
+      <section class="stats">
+        <div class="card">
+          <div class="title">Total Users</div>
+          <div class="value" id="totalUsers">—</div>
+          <div class="meta">Active in last 30 days</div>
+        </div>
+        <div class="card">
+          <div class="title">Total Sellers</div>
+          <div class="value" id="totalSellers">—</div>
+          <div class="meta">Approved sellers</div>
+        </div>
+        <div class="card">
+          <div class="title">Orders (30d)</div>
+          <div class="value" id="totalOrders">—</div>
+          <div class="meta">Completed + Pending</div>
+        </div>
+        <div class="card">
+          <div class="title">Revenue (30d)</div>
+          <div class="value" id="totalRevenue">₱—</div>
+          <div class="meta">Estimated gross</div>
+        </div>
+      </section>
+
+      <div class="grid">
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div><strong>Recent Orders</strong><div style="font-size:13px;color:var(--muted)">Latest 10 orders</div></div>
+              <div><button class="btn ghost" onclick="loadOrders()">Refresh</button></div>
+            </div>
+
+            <div style="overflow:auto">
+              <table id="ordersTable">
+                <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  <!-- orders inserted by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <strong>Top insights</strong>
+            <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:160px">
+                <div style="font-size:13px;color:var(--muted)">Avg order value</div>
+                <div style="font-weight:700;font-size:18px" id="aov">—</div>
+              </div>
+              <div style="flex:1;min-width:160px">
+                <div style="font-size:13px;color:var(--muted)">Return rate</div>
+                <div style="font-weight:700;font-size:18px" id="returnRate">—</div>
+              </div>
+              <div style="flex:1;min-width:160px">
+                <div style="font-size:13px;color:var(--muted)">New users</div>
+                <div style="font-weight:700;font-size:18px" id="newUsers">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="card" style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Sellers</strong><button class="btn ghost" onclick="loadSellers()">View all</button></div>
+            <div id="sellersList" style="display:grid;gap:8px">
+              <!-- sellers inserted by JS -->
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><strong>Quick actions</strong></div>
+            <div style="display:grid;gap:8px">
+              <button class="btn" onclick="openCreateProduct()">+ Create product</button>
+              <button class="btn ghost" onclick="openReports()">Export reports</button>
+              <button class="btn danger" onclick="openSettings()">Delete test data</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <footer>© 2025 MyShop — Admin panel</footer>
+    </main>
+  </div>
+
+  <!-- Firebase v9 modular SDK (replace versions if needed) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+    // TODO: replace with your Firebase project config
+    const firebaseConfig = {
+  apiKey: "AIzaSyAKeKBuSZBNHkgR5kF68h5aYn50ONJofPQ",
+  authDomain: "nexus-c130b.firebaseapp.com",
+  projectId: "nexus-c130b",
+  storageBucket: "nexus-c130b.firebasestorage.app",
+  messagingSenderId: "530744870754",
+  appId: "1:530744870754:web:1a1c7436c4c977b8610e3b",
+  measurementId: "G-G4K7FZ5XYC"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Role protection: only allow admins
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // not signed in -> redirect to login
+        window.location.href = '/login.html';
+        return;
+      }
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const role = userDoc.exists() ? userDoc.data().role : null;
+      if (role !== 'admin') {
+        // not admin -> sign out and redirect
+        alert('You are not authorized to view this page.');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      // load dashboard data
+      loadSummary();
+      loadOrders();
+      loadSellers();
+    });
+
+    async function loadSummary(){
+      try{
+        // Example queries - for production, use aggregation or Cloud Functions for performance
+        const usersSnap = await getDocs(collection(db, 'users'));
+        document.getElementById('totalUsers').textContent = usersSnap.size;
+
+        const sellersQ = query(collection(db, 'users'), where('role','==','seller'));
+        const sellersSnap = await getDocs(sellersQ);
+        document.getElementById('totalSellers').textContent = sellersSnap.size;
+
+        const ordersSnap = await getDocs(collection(db, 'orders'));
+        document.getElementById('totalOrders').textContent = ordersSnap.size;
+
+        // naive revenue sum
+        let revenue = 0;
+        ordersSnap.forEach(d => { const data = d.data(); revenue += data.total || 0; });
+        document.getElementById('totalRevenue').textContent = '₱ ' + revenue.toFixed(2);
+
+        // more insights (placeholders)
+        document.getElementById('aov').textContent = revenue && ordersSnap.size ? '₱ ' + (revenue / ordersSnap.size).toFixed(2) : '—';
+        document.getElementById('returnRate').textContent = '2.4%';
+        document.getElementById('newUsers').textContent = '—';
+      }catch(e){console.error(e)}
+    }
+
+    async function loadOrders(){
+      const tbody = document.querySelector('#ordersTable tbody');
+      tbody.innerHTML = '';
+      try{
+        const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(10));
+        const snap = await getDocs(q);
+        snap.forEach(docu => {
+          const o = docu.data();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>#${docu.id}</td>
+            <td>${o.customerName || o.customerEmail || '—'}</td>
+            <td>${o.createdAt && o.createdAt.toDate ? o.createdAt.toDate().toLocaleString() : '—'}</td>
+            <td>₱ ${((o.total||0)).toFixed(2)}</td>
+            <td><span class="status ${o.status || 'pending'}">${o.status || 'pending'}</span></td>
+            <td><button class="btn ghost" onclick="viewOrder('${docu.id}')">View</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+        if (snap.size === 0) tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No recent orders</td></tr>';
+      }catch(e){console.error(e); tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">Failed to load orders</td></tr>'}
+    }
+
+    async function loadSellers(){
+      const container = document.getElementById('sellersList');
+      container.innerHTML = '';
+      try{
+        const q = query(collection(db, 'users'), where('role','==','seller'), orderBy('displayName'));
+        const snap = await getDocs(q);
+        snap.forEach(docu => {
+          const s = docu.data();
+          const el = document.createElement('div');
+          el.className = 'seller';
+          el.innerHTML = `
+            <div class="left"><img src="${s.avatar || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg'}" alt="" /><div style="line-height:1"><div style="font-weight:700">${s.displayName||s.email}</div><div style="font-size:13px;color:var(--muted)">${s.storeName||'—'}</div></div></div>
+            <div><button class="btn ghost" onclick="openSeller('${docu.id}')">Open</button></div>
+          `;
+          container.appendChild(el);
+        });
+        if (snap.size === 0) container.innerHTML = '<div style="color:var(--muted)">No sellers yet.</div>';
+      }catch(e){console.error(e); container.innerHTML = '<div style="color:var(--muted)">Failed to load sellers</div>'}
+    }
+
+    // Placeholder actions
+    window.viewOrder = function(id){ alert('View order ' + id); }
+    window.openSeller = function(id){ alert('Open seller ' + id); }
+    window.openCreateProduct = function(){ alert('Open create product flow'); }
+    window.openReports = function(){ alert('Export reports (not implemented)'); }
+    window.openSettings = function(){ if(confirm('Delete test data?')) alert('Deleted (not really)'); }
+  </script>
+
+  <!-- Notes:
+    - Replace the firebaseConfig with your project credentials.
+    - For larger datasets, don't fetch whole collections in the client. Use Firestore aggregation queries, Cloud Functions, or server-side APIs.
+    - Protect admin-only data with Firestore security rules and check roles via the Admin SDK or custom claims where appropriate.
+  -->
+</body>
+</html>
